@@ -28,3 +28,7 @@
     - Buka basis direktori dan run environment python sesuai sistem operasi
     - Install library yang diperlukan
     - Run "python app.py"
+
+# Success
+
+![Setelah Berhasil](./screenshots/s1.png)
