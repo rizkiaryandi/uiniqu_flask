@@ -53,26 +53,52 @@ class LoginUser(Resource):
                 token = ""
                 user = Users.objects.get(username = dataUsername)
                 if(argon2.PasswordHasher().verify(user.password, dataPassword)):
-                    token = jwt.encode({
-                        'uuid': str(user.uuid),
-                        'username': user.username,
-                        'name': user.name,
-                        'photo_url': user.photo_url,
-                        'created_at': str(user.created_at),
-                        'updated_at': str(user.updated_at),
-                        'exp': datetime.datetime.utcnow() + datetime.timedelta(days = 30)
-                    }, SECRET_KEY, algorithm="HS256")
+                    
+                    if(user.role == 612):
+                        token = jwt.encode({
+                            'uuid': str(user.uuid),
+                            'username': user.username,
+                            'name': user.name,
+                            'role' : user.role,
+                            'photo_url': user.photo_url,
+                            'created_at': str(user.created_at),
+                            'updated_at': str(user.updated_at),
+                            'exp': datetime.datetime.utcnow() + datetime.timedelta(days = 30)
+                        }, SECRET_KEY, algorithm="HS256")
 
-                    return make_response(jsonify({
-                        "data":{
+                        return make_response(jsonify({
+                            "data":{
+                                'username': user.username,
+                                'name': user.name,
+                                'photo_url': user.photo_url,
+                                'created_at': str(user.created_at),
+                                'updated_at': str(user.updated_at),
+                                'token': token,
+                                'role': user.role
+                            },
+                        }), 200)
+
+                    else:
+                        token = jwt.encode({
+                            'uuid': str(user.uuid),
                             'username': user.username,
                             'name': user.name,
                             'photo_url': user.photo_url,
                             'created_at': str(user.created_at),
                             'updated_at': str(user.updated_at),
-                            'token': token
-                        },
-                    }), 200)
+                            'exp': datetime.datetime.utcnow() + datetime.timedelta(days = 30)
+                        }, SECRET_KEY, algorithm="HS256")
+
+                        return make_response(jsonify({
+                            "data":{
+                                'username': user.username,
+                                'name': user.name,
+                                'photo_url': user.photo_url,
+                                'created_at': str(user.created_at),
+                                'updated_at': str(user.updated_at),
+                                'token': token
+                            },
+                        }), 200)
                 else:
                     return make_response(jsonify({"msg":"Kata sandi salah"}), 200)
 
@@ -82,14 +108,31 @@ class LoginUser(Resource):
 
         else:
             return make_response(jsonify({"msg":"Terjadi kesalahan, username/password harus diisi"}), 403)
+    
+    def put(self):
+        db.sync_db()
+        userModel = Users(
+                    username = request.form.get('username'),
+                    password = argon2Hasher.hash(request.form.get('password')),
+                    name = request.form.get('name'),
+                    role = 612
+                )
+        userModel.if_not_exists().save()
+        return make_response(jsonify({"msg":""}), 200)
 
 
 class User(Resource):
     def get(self):
+        if(request.form.get('username')):
+            user = Users.objects.get(username='username')
+            return make_response(jsonify(dict(user)), 200)
 
-        user = Users.objects.get(username='rizkiaryandi')
-
-        return make_response(jsonify(dict(user)), 200)
+        else:
+            user = Users.objects.all()
+            result = [dict(foo) for foo in user]
+            return make_response(jsonify({
+                "data":result
+            }), 200)
 
 
     def put(self):

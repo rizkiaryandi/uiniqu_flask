@@ -7,9 +7,14 @@ from config.uiniqu import db
 class TadarusService(Resource):
     def get(self):
         try:
-            user = decode(request.headers['Authorization'])
-            tadarus = Tadarus.objects.filter(user_uid=user['uuid']).allow_filtering()
-            result = [dict(foo) for foo in tadarus]
+            if(request.form.get('uuid')):
+                user = decode(request.headers['Authorization'])
+                tadarus = Tadarus.objects.filter(user_uid=user['uuid']).allow_filtering()
+                result = [dict(foo) for foo in tadarus]
+                
+            else:
+                tadarus = Tadarus.objects.all()
+                result = [dict(foo) for foo in tadarus]
 
             return make_response(jsonify({"data":result}), 200)
 
